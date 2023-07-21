@@ -51,7 +51,7 @@ static const char openocd_startup_tcl[] = {
 };
 
 /* Give scripts and TELNET a way to find out what version this is */
-COMMAND_HANDLER(handler_version_command)
+COMMAND_HANDLER(handler_version_command) ###判断openocd的版本
 {
 	char *version_str = OPENOCD_VERSION;
 
@@ -70,7 +70,7 @@ COMMAND_HANDLER(handler_version_command)
 	return ERROR_OK;
 }
 
-static int log_target_callback_event_handler(struct target *target,
+static int log_target_callback_event_handler(struct target *target,####openocd是否打印状态 调试器连接时使用
 	enum target_event event,
 	void *priv)
 {
@@ -96,11 +96,11 @@ static int log_target_callback_event_handler(struct target *target,
 
 static bool init_at_startup = true;
 
-COMMAND_HANDLER(handle_noinit_command)
+COMMAND_HANDLER(handle_noinit_command)###openocd启动时是否执行初始化操作
 {
 	if (CMD_ARGC != 0)
 		return ERROR_COMMAND_SYNTAX_ERROR;
-	init_at_startup = false;
+	init_at_startup = false;#设置false取消初始化 这样openocd不会自动枚举连接的调试器，直到执行init命令才初始化
 	return ERROR_OK;
 }
 
@@ -108,17 +108,17 @@ COMMAND_HANDLER(handle_noinit_command)
 COMMAND_HANDLER(handle_init_command)
 {
 
-	if (CMD_ARGC != 0)
+	if (CMD_ARGC != 0)#命令行参数应该为空
 		return ERROR_COMMAND_SYNTAX_ERROR;
 
 	int retval;
-	static int initialized;
+	static int initialized;#通过initialized来确保只初始化一次
 	if (initialized)
 		return ERROR_OK;
 
 	initialized = 1;
 
-	bool save_poll_mask = jtag_poll_mask();
+	bool save_poll_mask = jtag_poll_mask();#保存当前jtag poll模式
 
 	retval = command_run_line(CMD_CTX, "target init");
 	if (retval != ERROR_OK)
