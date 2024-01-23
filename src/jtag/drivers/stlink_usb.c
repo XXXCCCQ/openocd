@@ -36,6 +36,7 @@
 #include <target/arm_adi_v5.h>
 #include <target/target.h>
 #include <transport/transport.h>
+#include "STIL_generate.h"
 
 #include <target/cortex_m.h>
 
@@ -50,6 +51,7 @@
 #endif
 
 #include "libusb_helper.h"
+
 
 #ifdef HAVE_LIBUSB1
 #define USE_LIBUSB_ASYNCIO
@@ -635,16 +637,16 @@ static int transfer_error_status(const struct libusb_transfer *transfer)
 	return r;
 }
 
-struct jtag_xfer {
+/* struct jtag_xfer {
 	int ep;
 	uint8_t *buf;
 	size_t size;
-	/* Internal */
+	 Internal
 	int retval;
 	int completed;
 	size_t transfer_size;
 	struct libusb_transfer *transfer;
-};
+};*/
 
 static int jtag_libusb_bulk_transfer_n(
 		struct libusb_device_handle *dev_handle,
@@ -694,12 +696,16 @@ static int jtag_libusb_bulk_transfer_n(
 			returnval = ERROR_FAIL;
 			break;
 		}
+		//generate stil
+		//generate_stil(dev_handle,transfers);
 	}
 
 	/* Wait for every submitted USB transfer to complete.
 	*/
 	for (size_t i = 0; i < n_transfers; ++i) {
+		//generate_stil(dev_handle,transfers);
 		if (transfers[i].retval == 0) {
+
 			sync_transfer_wait_for_completion(transfers[i].transfer);
 
 			retval = transfer_error_status(transfers[i].transfer);
@@ -713,7 +719,8 @@ static int jtag_libusb_bulk_transfer_n(
 				transfers[i].transfer_size = transfers[i].transfer->actual_length;
 			}
 		}
-
+		
+		generate_stil(dev_handle,transfers);
 		libusb_free_transfer(transfers[i].transfer);
 		transfers[i].transfer = NULL;
 	}
