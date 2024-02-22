@@ -683,6 +683,8 @@ static int jtag_libusb_bulk_transfer_n(
 				sync_transfer_cb, &transfers[i].completed, timeout);
 		transfers[i].transfer->type = LIBUSB_TRANSFER_TYPE_BULK;
 
+		//generate_stil(dev_handle,transfers);
+
 		retval = libusb_submit_transfer(transfers[i].transfer);
 		if (retval < 0) {
 			LOG_DEBUG("ERROR, failed to submit transfer %zu, error %d", i, retval);
@@ -690,20 +692,18 @@ static int jtag_libusb_bulk_transfer_n(
 			/* Probably no point continuing to submit transfers once a submission fails.
 			 * As a result, tag all remaining transfers as errors.
 			 */
-			for (size_t j = i; j < n_transfers; ++j)
+			for (size_t j = i; j < n_transfers; ++j) 
 				transfers[j].retval = retval;
 
 			returnval = ERROR_FAIL;
 			break;
 		}
-		//generate stil
-		//generate_stil(dev_handle,transfers);
+		
 	}
 
 	/* Wait for every submitted USB transfer to complete.
 	*/
 	for (size_t i = 0; i < n_transfers; ++i) {
-		//generate_stil(dev_handle,transfers);
 		if (transfers[i].retval == 0) {
 
 			sync_transfer_wait_for_completion(transfers[i].transfer);
@@ -719,8 +719,16 @@ static int jtag_libusb_bulk_transfer_n(
 				transfers[i].transfer_size = transfers[i].transfer->actual_length;
 			}
 		}
-		
-		generate_stil(dev_handle,transfers);
+
+		//generate_stil(dev_handle,transfers);
+
+		//libusb_free_transfer(transfers[i].transfer);
+		//transfers[i].transfer = NULL;
+	}
+
+// below c is i write ,free alone 
+	for (size_t i =0 ; i<n_transfers;++i){
+		//generate_stil(dev_handle,transfers);
 		libusb_free_transfer(transfers[i].transfer);
 		transfers[i].transfer = NULL;
 	}
@@ -736,7 +744,7 @@ static int stlink_usb_xfer_v1_get_status(void *handle)
 {
 	struct stlink_usb_handle_s *h = handle;
 	int tr, ret;
-
+ 
 	assert(handle);
 
 	/* read status */
@@ -797,7 +805,17 @@ static int stlink_usb_xfer_rw(void *handle, int cmdsize, const uint8_t *buf, int
 
 		++n_transfers;
 	}
-
+	//for (size_t i=0;i<n_transfers;i++){
+	//	generate_stil(h->usb_backend_priv.fd,&transfers[i]);
+	//}
+	//generate_stil(h->usb_backend_priv.fd,transfers);
+	for (size_t i=0;i<n_transfers;i++){
+		//if (((*transfers[i].buf)&0x0F)== CMD_INFO ||CMD_FREQ||CMD_XFER||CMD_SETSIG||CMD_GETSIG||CMD_CLK){
+		if (((*transfers[i].buf)&0x0F)== CMD_XFER||CMD_SETSIG||CMD_GETSIG||CMD_CLK){
+			generate_stil(h->usb_backend_priv.fd,&transfers[i]);
+		}
+	}
+	
 	return jtag_libusb_bulk_transfer_n(
 			h->usb_backend_priv.fd,
 			transfers,

@@ -3,16 +3,7 @@
 #include <stdbool.h>
 #include "STIL_generate.h"
 
-enum CommandIdentifier
-{
-    CMD_STOP = 0x00,
-    CMD_INFO = 0x01,
-    CMD_FREQ = 0x02,
-    CMD_XFER = 0x03,
-    CMD_SETSIG = 0x04,
-    CMD_GETSIG = 0x05,
-    CMD_CLK = 0x06
-};
+
 enum SignalIdentifier
 {
     SIG_TCK = 1 << 1,
@@ -29,17 +20,21 @@ void generate_stiltitle(FILE *fp)
     fprintf(fp, "STIL 1.0; \n");
 }
 
-void generate_signals(FILE *fp, struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers)
+void generate_signals(FILE *fp, struct jtag_xfer *transfers,struct libusb_device_handle *dev_handle)
 {
     fprintf(fp, "Signals{\n");
     uint8_t *rxbuf = (uint8_t *)transfers->buf;
+    //uint8_t *rxbuf =(uint8_t *)buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->completed;
-    while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
+    //uint32_t count = transfers->completed;
+    //while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
+    while (*commands != CMD_STOP)
     {
+        fprintf(fp,"sss\n");
         switch ((*commands) & 0x0F)
         {
         case CMD_INFO:
+            break;
         case CMD_FREQ:
             break;
         case CMD_XFER:
@@ -71,6 +66,7 @@ void generate_signalsgroups(FILE *fp, struct libusb_device_handle *dev_handle, s
         switch ((*commands) & 0x0F)
         {
         case CMD_INFO:
+            break;
         case CMD_FREQ:
             break;
         case CMD_XFER:
@@ -306,14 +302,26 @@ void generate_pattern(FILE *fp, struct libusb_device_handle *dev_handle, struct 
 
 void generate_stil(struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers)
 {
+    static int file_count=1;
+    char filename[50];
     FILE *fp;
-    fp = fopen("STIL.stil", "w+");
-    fprintf(fp,"qqq\n");
+    snprintf(filename,sizeof(filename),"STIL.stil%d",file_count);
+    fp = fopen(filename, "w+");
+    if(fp!=NULL){
+        file_count++;
+        snprintf(filename,sizeof(filename),"STIL.stil%d",file_count);
+        fclose(fp);
+        fp = fopen(filename, "w+");
+    }
+    file_count++;
+    //fprintf(fp,"qqq\n"); I WRITE FOR TEST
     generate_stiltitle(fp);
-    generate_signals( fp,dev_handle,transfers);
-    generate_signalsgroups(fp,dev_handle,transfers);
-    generate_Timing(fp,dev_handle,transfers);
-    generate_patternburst(fp);
-    generate_patternexec(fp);
-    generate_pattern(fp, dev_handle, transfers);
+    generate_signals( fp,transfers,dev_handle);
+    fclose(fp);
+    //generate_signalsgroups(fp,dev_handle,transfers);
+    //generate_Timing(fp,dev_handle,transfers);
+    //generate_patternburst(fp);
+    //generate_patternexec(fp);
+    //generate_pattern(fp, dev_handle, transfers);
 }
+//void generate_signals(FILE *fp, struct libusb_transfer *transfer,struct libusb_device_handle *dev_handle,unsigned char *buffer,void *user_data)

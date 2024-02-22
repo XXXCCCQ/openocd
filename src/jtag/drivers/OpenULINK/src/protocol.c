@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+=// SPDX-License-Identifier: GPL-2.0-or-later
 
 /***************************************************************************
  *   Copyright (C) 2011 by Martin Schmoelzer                               *
@@ -13,7 +13,7 @@
 #include "msgtypes.h"
 
 #include "reg_ezusb.h"
-
+#include "STIL_bin.h"
 /**
  * @file
  * Implementation of the OpenULINK communication protocol.
@@ -208,8 +208,11 @@ void command_loop(void)
 
 		/* Execute the commands */
 		last_command = false;
-		while (last_command == false)
+		while (last_command == false){
 			last_command = execute_command();
+			LOG_INFO("JTAG BEGGING RUN");//i write for test
+			generate_stil();// generate stil 
+			}
 
 		CLEAR_COM_LED();
 

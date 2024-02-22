@@ -23,6 +23,7 @@ DRIVERFILES =
 
 # Standard Driver: common files
 DRIVERFILES += %D%/driver.c
+DRIVERFILES += %D%/STIL_generate.c
 
 if USE_LIBUSB1
 DRIVERFILES += %D%/libusb_helper.c
@@ -201,6 +202,9 @@ endif
 if AM335XGPIO
 DRIVERFILES += %D%/am335xgpio.c
 endif
+if DIRTYJTAG
+DRIVERFILES += %D%/dirtyjtag.c
+endif
 
 DRIVERHEADERS = \
 	%D%/bitbang.h \
@@ -211,6 +215,7 @@ DRIVERHEADERS = \
 	%D%/minidriver_imp.h \
 	%D%/mpsse.h \
 	%D%/rlink.h \
+	%D%/STIL_generate.h \
 	%D%/rlink_dtc_cmd.h \
 	%D%/rlink_ep1_cmd.h \
 	%D%/rlink_st7.h \
