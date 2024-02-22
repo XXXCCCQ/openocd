@@ -307,12 +307,12 @@ void generate_stil(struct libusb_device_handle *dev_handle, struct jtag_xfer *tr
     FILE *fp;
     snprintf(filename,sizeof(filename),"STIL.stil%d",file_count);
     fp = fopen(filename, "w+");
-    if(fp!=NULL){
-        file_count++;
-        snprintf(filename,sizeof(filename),"STIL.stil%d",file_count);
-        fclose(fp);
-        fp = fopen(filename, "w+");
-    }
+    //if(fp!=NULL){
+     //   file_count++;
+      //  snprintf(filename,sizeof(filename),"STIL.stil%d",file_count);
+        //fclose(fp);
+        //fp = fopen(filename, "w+");
+    //}
     file_count++;
     //fprintf(fp,"qqq\n"); I WRITE FOR TEST
     generate_stiltitle(fp);
