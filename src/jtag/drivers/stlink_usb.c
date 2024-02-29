@@ -661,7 +661,7 @@ static int jtag_libusb_bulk_transfer_n(
 	for (size_t i = 0; i < n_transfers; ++i) {
 		transfers[i].retval = 0;
 		transfers[i].completed = 0;
-		transfers[i].transfer_size = 0;
+		transfers[i].transfer_size = 0;					
 		transfers[i].transfer = libusb_alloc_transfer(0);
 
 		if (!transfers[i].transfer) {
@@ -683,7 +683,7 @@ static int jtag_libusb_bulk_transfer_n(
 				sync_transfer_cb, &transfers[i].completed, timeout);
 		transfers[i].transfer->type = LIBUSB_TRANSFER_TYPE_BULK;
 
-		//generate_stil(dev_handle,transfers);
+		
 
 		retval = libusb_submit_transfer(transfers[i].transfer);
 		if (retval < 0) {
@@ -719,12 +719,17 @@ static int jtag_libusb_bulk_transfer_n(
 				transfers[i].transfer_size = transfers[i].transfer->actual_length;
 			}
 		}
-
-		//generate_stil(dev_handle,transfers);
-
-		//libusb_free_transfer(transfers[i].transfer);
-		//transfers[i].transfer = NULL;
 	}
+	
+	for (size_t i=0;i<n_transfers;i++){
+		//if (((*transfers[i].buf)&0x0F)== CMD_INFO ||CMD_FREQ||CMD_XFER||CMD_SETSIG||CMD_GETSIG||CMD_CLK){
+			if (((*transfers[i].transfer->buffer)&0x0F)== CMD_XFER||
+			((*transfers[i].transfer->buffer)&0x0F)==CMD_SETSIG||
+			((*transfers[i].transfer->buffer)&0x0F)==CMD_GETSIG||
+			((*transfers[i].transfer->buffer)&0x0F)==CMD_CLK){
+				generate_stil(dev_handle,transfers[i].transfer);
+			}	
+		}
 
 // below c is i write ,free alone 
 	for (size_t i =0 ; i<n_transfers;++i){
@@ -805,16 +810,7 @@ static int stlink_usb_xfer_rw(void *handle, int cmdsize, const uint8_t *buf, int
 
 		++n_transfers;
 	}
-	//for (size_t i=0;i<n_transfers;i++){
-	//	generate_stil(h->usb_backend_priv.fd,&transfers[i]);
-	//}
-	//generate_stil(h->usb_backend_priv.fd,transfers);
-	for (size_t i=0;i<n_transfers;i++){
-		//if (((*transfers[i].buf)&0x0F)== CMD_INFO ||CMD_FREQ||CMD_XFER||CMD_SETSIG||CMD_GETSIG||CMD_CLK){
-		if (((*transfers[i].buf)&0x0F)== CMD_XFER||CMD_SETSIG||CMD_GETSIG||CMD_CLK){
-			generate_stil(h->usb_backend_priv.fd,&transfers[i]);
-		}
-	}
+	
 	
 	return jtag_libusb_bulk_transfer_n(
 			h->usb_backend_priv.fd,
