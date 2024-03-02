@@ -23,14 +23,25 @@ enum CommandModifier {
   READOUT = 0x80,
 };
 
-static int xfer_bytes(const uint8_t *commands,bool extend_length, bool no_read){
+static int xfer_bytes(const uint8_t *commands,bool extend_length){
     uint16_t transferred_bits = commands[1];
     if (extend_length)
-        transferred_bits+=256;
-    if (transferred_bits> 62*8){
+        transferred_bits += 256;
+    if (transferred_bits > 62*8){
         transferred_bits = 62*8;
     }
-    return (transferred_bits + 7) / 8;
+    return transferred_bits ;
+}
+
+bool max_frequency=true;
+
+static bool verify_maxfrequency(uint32_t frequency){
+    if (frequency == 0) {
+    frequency = 1;
+    } else if (frequency > 1500) {
+    frequency = 1500;
+    }
+    return max_frequency = (frequency == 1500);
 }
 
 void generate_stiltitle(FILE *fp)
@@ -44,20 +55,21 @@ void generate_signals(FILE *fp, struct libusb_transfer *transfers,struct libusb_
     uint8_t *rxbuf = (uint8_t *)transfers->buffer;
     //uint8_t *rxbuf =(uint8_t *)buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->length;
+    uint32_t count = transfers->actual_length;
+    uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
         switch ((*commands) & 0x0F)
         {
-        case CMD_INFO:
-            break;
+        // case CMD_INFO:
+        //     break;
         case CMD_FREQ:
             commands+=2;
             break;
         case CMD_XFER:
             fprintf(fp, "  TDI Out;TCK Out;\n");
             fprintf(fp, "  TDO In;\n");
-            commands+=1+xfer_bytes(commands,*commands & EXTEND_LENGTH, *commands & NO_READ );
+            commands+=(7+trbytes)/8+1;
             break;
         case CMD_SETSIG:
             fprintf(fp, "  TDI Out;TCK Out;TMS Out;TRST Out;SRST Out;\n");
@@ -81,7 +93,8 @@ void generate_signalsgroups(FILE *fp, struct libusb_device_handle *dev_handle, s
     fprintf(fp, "SignalsGroups{\n");
     uint8_t *rxbuf = (uint8_t *)transfers->buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->length;
+    uint32_t count = transfers->actual_length;
+    uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
         switch ((*commands) & 0x0F)
@@ -98,7 +111,7 @@ void generate_signalsgroups(FILE *fp, struct libusb_device_handle *dev_handle, s
             fprintf(fp, "  SI1='TDI';   {ScanIn 16;}\n");
             fprintf(fp, "  SI2='TCK';   {ScanIn 16;}\n");
             fprintf(fp, "  SO1='TDO';   {ScanIn 16;}\n");
-            commands+=1+xfer_bytes(commands,*commands & EXTEND_LENGTH, *commands & NO_READ );
+            commands+=(7+trbytes)/8+1;
             break;
         case CMD_SETSIG:
             fprintf(fp, "  ABUS='TDI+TCK+TMS+TRST+SRST';\n");
@@ -135,20 +148,12 @@ void generate_Timing(FILE *fp, struct libusb_device_handle *dev_handle, struct l
     fprintf(fp, "Timing{\n");
     uint8_t *rxbuf = (uint8_t *)transfers->buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->length;
+    uint32_t count = transfers->actual_length;
+    uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
         switch ((*commands) & 0x0F)
         {
-        case CMD_INFO:
-            fprintf(fp, "  WaveformTable scan{\n");
-            fprintf(fp, "    Period '500ns';\n");
-            fprintf(fp, "    Waveforms{\n");
-            fprintf(fp, "      ALL{ 10 {'0ns' U/D;}}\n");
-            fprintf(fp, "      ALL{ HLZX {'0ns' Z;'260ns' H/L/Z/X;}}\n");
-            fprintf(fp, "    }\n");
-            fprintf(fp, "  }\n");
-            break;
         case CMD_FREQ:
             fprintf(fp, "  WaveformTable scan{\n");
             fprintf(fp, "    Period '500ns';\n");
@@ -167,7 +172,7 @@ void generate_Timing(FILE *fp, struct libusb_device_handle *dev_handle, struct l
             fprintf(fp, "      ALL{ HLZX {'0ns' Z;'260ns' H/L/Z/X;}}\n");
             fprintf(fp, "    }\n");
             fprintf(fp, "  }\n");
-            commands+=1+xfer_bytes(commands,*commands & EXTEND_LENGTH, *commands & NO_READ );
+            commands+=(7+trbytes)/8+1;
             break;
         case CMD_SETSIG:
             fprintf(fp, "  WaveformTable scan{\n");
@@ -219,14 +224,14 @@ void generate_patternexec(FILE *fp)
     fprintf(fp, "}\n");
 }
 
-void generate_xferpart(FILE *fp, uint16_t length,const uint8_t *in)
+void generate_xferpart(FILE *fp, uint16_t xfer_length,const uint8_t *in)
 {
-    uint32_t xfer_length;
-    xfer_length = length;
+    uint32_t length;
+    length=xfer_length;
     const uint8_t *xfer_in;
     xfer_in = in;
     fprintf(fp, "    SI1="); // tdi
-    for (uint32_t i = 0; i < xfer_length; i++)
+    for (uint32_t i = 0; i < length; i++)
     {
         if ((xfer_in[i / 8] >> (7 - (i % 8))) & 1)
         {
@@ -240,7 +245,7 @@ void generate_xferpart(FILE *fp, uint16_t length,const uint8_t *in)
     fprintf(fp, ";\n");
 
     fprintf(fp, "    SI2=");
-    for (uint32_t i = 0; i < xfer_length; i++)
+    for (uint32_t i = 0; i < length; i++)
     {
         fprintf(fp, "HL");
     }
@@ -345,10 +350,11 @@ void generate_pattern(FILE *fp, struct libusb_device_handle *dev_handle, struct 
 {
     fprintf(fp, "Pattern scan {\n");
     uint8_t *rxbuf = (uint8_t *)transfers->buffer;
-    uint32_t count = transfers->length;
+    uint32_t count = transfers->actual_length;
     uint8_t *commands = rxbuf;
+    uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     
-    
+
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
         switch ((*commands) & 0x0F)
@@ -356,11 +362,16 @@ void generate_pattern(FILE *fp, struct libusb_device_handle *dev_handle, struct 
         case CMD_INFO:
             break;
         case CMD_FREQ:
+            max_frequency=verify_maxfrequency((commands[1]<<9 | commands[2]));
             commands+=2;
             break;
         case CMD_XFER:
-            generate_xferpart(fp, commands[1],commands+2);
-            commands+=1+xfer_bytes(commands,*commands & EXTEND_LENGTH, *commands & NO_READ );
+            uint32_t byte_length = max_frequency ? xfer_bytes(commands,*commands & EXTEND_LENGTH)/8 : 0;
+            uint16_t remaining_length = max_frequency ? xfer_bytes(commands,*commands & EXTEND_LENGTH) & 7 : xfer_bytes(commands,*commands & EXTEND_LENGTH);
+            if (remaining_length){
+                generate_xferpart(fp, remaining_length,&(commands+2)[byte_length]);
+            }
+            commands+=(7+trbytes)/8+1;
             break;
         case CMD_SETSIG:
             generate_setsigpart(fp, &(*commands));
@@ -393,7 +404,7 @@ void generate_stil(struct libusb_device_handle *dev_handle, struct libusb_transf
     //     fp = fopen(filename, "w+");
     // }
     // fprintf(fp,"qqq\n"); //I WRITE FOR TEST
-    fp=fopen("STIL1.txt","a+");
+    fp=fopen("STIL5.txt","a+");
     generate_stiltitle(fp);
     generate_signals( fp,transfers,dev_handle);
     generate_signalsgroups(fp,dev_handle,transfers);
