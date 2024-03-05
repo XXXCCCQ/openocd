@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "STIL_generate.h"
+#include <helper/log.h>
 
 
 enum SignalIdentifier
@@ -15,15 +16,9 @@ enum SignalIdentifier
 
 };
 
-enum CommandModifier {
-  // CMD_XFER
-  NO_READ = 0x80,
-  EXTEND_LENGTH = 0x40,
-  // CMD_CLK
-  READOUT = 0x80,
-};
 
-static int xfer_bytes(const uint8_t *commands,bool extend_length){
+
+int xfer_bytes(const uint8_t *commands,bool extend_length){
     uint16_t transferred_bits = commands[1];
     if (extend_length)
         transferred_bits += 256;
@@ -49,14 +44,16 @@ void generate_stiltitle(FILE *fp)
     fprintf(fp, "STIL 1.0; \n");
 }
 
-void generate_signals(FILE *fp, struct libusb_transfer *transfers,struct libusb_device_handle *dev_handle)
+void generate_signals(FILE *fp, struct jtag_xfer *transfers,struct libusb_device_handle *dev_handle)
 {
     fprintf(fp, "Signals{\n");
-    uint8_t *rxbuf = (uint8_t *)transfers->buffer;
+    uint8_t *rxbuf = (uint8_t *)transfers->transfer->buffer;
     //uint8_t *rxbuf =(uint8_t *)buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->actual_length;
-    uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
+    uint32_t count = transfers->transfer->actual_length;
+    uint32_t trbytes=xfer_bytes(commands,(*commands & EXTEND_LENGTH));
+    LOG_INFO("values of commmands[1]:%d",commands[1]);
+    LOG_INFO("values of trbytes:%d",trbytes);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
         switch ((*commands) & 0x0F)
@@ -88,12 +85,12 @@ void generate_signals(FILE *fp, struct libusb_transfer *transfers,struct libusb_
     fprintf(fp, "}\n");
 }
 
-void generate_signalsgroups(FILE *fp, struct libusb_device_handle *dev_handle, struct libusb_transfer *transfers)
+void generate_signalsgroups(FILE *fp, struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers)
 {
     fprintf(fp, "SignalsGroups{\n");
-    uint8_t *rxbuf = (uint8_t *)transfers->buffer;
+    uint8_t *rxbuf = (uint8_t *)transfers->transfer->buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->actual_length;
+    uint32_t count = transfers->transfer->actual_length;
     uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
@@ -143,12 +140,12 @@ void generate_signalsgroups(FILE *fp, struct libusb_device_handle *dev_handle, s
     fprintf(fp, "}\n");
 }
 
-void generate_Timing(FILE *fp, struct libusb_device_handle *dev_handle, struct libusb_transfer *transfers)
+void generate_Timing(FILE *fp, struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers)
 {
     fprintf(fp, "Timing{\n");
-    uint8_t *rxbuf = (uint8_t *)transfers->buffer;
+    uint8_t *rxbuf = (uint8_t *)transfers->transfer->buffer;
     uint8_t *commands = rxbuf;
-    uint32_t count = transfers->actual_length;
+    uint32_t count = transfers->transfer->actual_length;
     uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
     {
@@ -228,6 +225,7 @@ void generate_xferpart(FILE *fp, uint16_t xfer_length,const uint8_t *in)
 {
     uint32_t length;
     length=xfer_length;
+    LOG_INFO("length=%d",length);
     const uint8_t *xfer_in;
     xfer_in = in;
     fprintf(fp, "    SI1="); // tdi
@@ -346,11 +344,11 @@ void generate_clkpart(FILE *fp, const uint8_t *commands)
     fprintf(fp, ";}\n");
 }
 
-void generate_pattern(FILE *fp, struct libusb_device_handle *dev_handle, struct libusb_transfer *transfers)
+void generate_pattern(FILE *fp, struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers)
 {
     fprintf(fp, "Pattern scan {\n");
-    uint8_t *rxbuf = (uint8_t *)transfers->buffer;
-    uint32_t count = transfers->actual_length;
+    uint8_t *rxbuf = (uint8_t *)transfers->transfer->buffer;
+    uint32_t count = transfers->transfer->actual_length;
     uint8_t *commands = rxbuf;
     uint32_t trbytes=xfer_bytes(commands,*commands & EXTEND_LENGTH);
     
@@ -390,7 +388,7 @@ void generate_pattern(FILE *fp, struct libusb_device_handle *dev_handle, struct 
     fprintf(fp, "}\n");
 }
 
-void generate_stil(struct libusb_device_handle *dev_handle, struct libusb_transfer *transfers)
+void generate_stil(struct libusb_device_handle *dev_handle,struct jtag_xfer *transfers)
 {
     FILE *fp;
     // static int file_count=1;
@@ -404,14 +402,14 @@ void generate_stil(struct libusb_device_handle *dev_handle, struct libusb_transf
     //     fp = fopen(filename, "w+");
     // }
     // fprintf(fp,"qqq\n"); //I WRITE FOR TEST
-    fp=fopen("STIL5.txt","a+");
+    fp=fopen("STIL7.txt","a+");
     generate_stiltitle(fp);
     generate_signals( fp,transfers,dev_handle);
-    generate_signalsgroups(fp,dev_handle,transfers);
-    generate_Timing(fp,dev_handle,transfers);
-    generate_patternburst(fp);
-    generate_patternexec(fp);
-    generate_pattern(fp, dev_handle, transfers);
+    // generate_signalsgroups(fp,dev_handle,transfers);
+    // generate_Timing(fp,dev_handle,transfers);
+    // generate_patternburst(fp);
+    // generate_patternexec(fp);
+    // generate_pattern(fp, dev_handle, transfers);
     fclose(fp);
 }
 //void generate_signals(FILE *fp, struct libusb_transfer *transfer,struct libusb_device_handle *dev_handle,unsigned char *buffer,void *user_data)

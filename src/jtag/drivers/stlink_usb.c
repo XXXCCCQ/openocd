@@ -744,7 +744,7 @@ static int jtag_libusb_bulk_transfer_n(
 						LOG_INFO("value of trbytes1:%d",trbytes1);
 						FILE *fp;
 						fp=fopen("stil111","a+");
-						generate_signals( fp,transfers[i].transfer,dev_handle);
+						generate_signals( fp,&transfers[i],dev_handle);
 						fclose(fp);
 						commands1+=(7+trbytes1)/8+1;
 						//generate_stil(dev_handle,transfers[i].transfer);
