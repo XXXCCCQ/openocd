@@ -717,45 +717,89 @@ static int jtag_libusb_bulk_transfer_n(
 				/* Assuming actual_length is only valid if there is no transfer error.
 				 */
 				transfers[i].transfer_size = transfers[i].transfer->actual_length;
+
+				uint8_t *rxbuf1 = (uint8_t *)transfers[i].transfer->buffer;
+				uint8_t *commands1 = rxbuf1;
+				uint32_t count1 = transfers[i].transfer->actual_length;
+				while ((commands1 < (rxbuf1 + count1)) && (*commands1 != CMD_STOP))
+    			{
+					switch ((*commands1) & 0x0F)
+        			{
+						case CMD_FREQ:
+							commands1+=2;
+							break;
+						case CMD_SETSIG:
+							commands1+=2;
+							break;
+						case CMD_CLK:
+							commands1+=2;
+							break;
+						case CMD_XFER:
+							uint32_t trbytes1=xfer_bytes(commands1,(*commands1 & EXTEND_LENGTH));
+							uint8_t *data=transfers[i].buf;
+							size_t data_size=transfers[i].transfer_size;
+							for(size_t j=0;j<data_size;++j){
+							LOG_INFO("transfer data:%02X",data[j]);
+							}
+							commands1+=(7+trbytes1)/8+1;
+							break;
+						default:
+							break;
+					}
+					commands1++;
+				}
+				
 			}
 		}
 	}
 	
 
-	for (size_t i=0;i<n_transfers;i++){
-				//generate_stil(dev_handle,transfers[i].transfer);
-				uint8_t *rxbuf1 = (uint8_t *)transfers[i].transfer->buffer;
-				uint8_t *commands1 = rxbuf1;
-				uint32_t count1 = transfers[i].transfer->actual_length;
+	// for (size_t i=0;i<n_transfers;i++){
+	// 			//generate_stil(dev_handle,transfers[i].transfer);
+	// 			uint8_t *rxbuf1 = (uint8_t *)transfers[i].transfer->buffer;
+	// 			uint8_t *commands1 = rxbuf1;
+	// 			uint32_t count1 = transfers[i].transfer->actual_length;
 
-				if (((*commands1)&0x0F)== CMD_XFER
-				||((*commands1)&0x0F)==CMD_SETSIG
-				||((*commands1)&0x0F)==CMD_GETSIG
-				||((*commands1)&0x0F)==CMD_CLK
-				||((*commands1)&0x0F)==CMD_FREQ
-				){
-				while ((commands1 < (rxbuf1 + count1)) && (*commands1 != CMD_STOP))
-    			{
-					switch ((*commands1) & 0x0F)
-        			{
-					case CMD_XFER:
-						LOG_INFO("value of commmands[1]:%d",commands1[1]);//log commands transferbits
-						uint32_t trbytes1=xfer_bytes(commands1,(*commands1 & EXTEND_LENGTH));
-						LOG_INFO("value of trbytes1:%d",trbytes1);
-						FILE *fp;
-						fp=fopen("stil111","a+");
-						generate_signals( fp,&transfers[i],dev_handle);
-						fclose(fp);
-						commands1+=(7+trbytes1)/8+1;
-						//generate_stil(dev_handle,transfers[i].transfer);
-						break;
-					default :
-						break;
-					}
-				commands1++;
-				}
-			}
-		}
+	// 			if (((*commands1)&0x0F)== CMD_XFER
+	// 			||((*commands1)&0x0F)==CMD_SETSIG
+	// 			||((*commands1)&0x0F)==CMD_GETSIG
+	// 			||((*commands1)&0x0F)==CMD_CLK
+	// 			||((*commands1)&0x0F)==CMD_FREQ
+	// 			){
+	// 				//LOG_INFO("position of commands1:%p",commands1);
+	// 			while ((commands1 < (rxbuf1 + count1)) && (*commands1 != CMD_STOP))
+    // 			{
+	// 				switch ((*commands1) & 0x0F)
+    //     			{
+	// 					case CMD_FREQ:
+	// 						commands1+=2;
+	// 						break;
+	// 					case CMD_SETSIG:
+	// 						commands1+=2;
+	// 						break;
+	// 					case CMD_CLK:
+	// 						commands1+=2;
+	// 						break;
+	// 					case CMD_XFER:
+	// 						LOG_INFO("value of commmands1[1]:%d",commands1[1]);//log commands transferbits
+	// 						LOG_INFO("value at commands1 +2:0x%02X",*(commands1+2));
+	// 						uint32_t trbytes1=xfer_bytes(commands1,(*commands1 & EXTEND_LENGTH));
+	// 						//LOG_INFO("value of trbytes1:%d",trbytes1);
+	// 						// FILE *fp;
+	// 						// fp=fopen("stil111","a+");
+	// 						// generate_signals( fp,&transfers[i],dev_handle);
+	// 						// fclose(fp);
+	// 						LOG_INFO("position of commands2:%p",commands1);
+	// 						generate_stil(dev_handle,&transfers[i]);
+	// 						commands1+=(7+trbytes1)/8+1;
+	// 						break;
+	// 					default :
+	// 						break;
+	// 				}
+	// 				commands1++;
+	// 			}
+	// 		}
+	// 	}
 //((*transfers[i].transfer->buffer)&0x0F)==CMD_FREQ
 // below c is i write ,free alone 
 	for (size_t i =0 ; i<n_transfers;++i){
