@@ -51,7 +51,6 @@ void generate_signals(FILE *fp, struct jtag_xfer *transfers,struct libusb_device
     //uint8_t *rxbuf =(uint8_t *)buffer;
     uint8_t *commands = rxbuf;
     uint32_t count = transfers->transfer->actual_length;
-    uint32_t trbytes=xfer_bytes(commands,(*commands & EXTEND_LENGTH));
     LOG_INFO("values of commmands[1]:%d",commands[1]);
     LOG_INFO("values of trbytes:%d",trbytes);
     while ((commands < (rxbuf + count)) && (*commands != CMD_STOP))
@@ -64,6 +63,7 @@ void generate_signals(FILE *fp, struct jtag_xfer *transfers,struct libusb_device
             commands+=2;
             break;
         case CMD_XFER:
+            uint32_t trbytes=xfer_bytes(commands,(*commands & EXTEND_LENGTH));
             fprintf(fp, "  TDI Out;TCK Out;\n");
             fprintf(fp, "  TDO In;\n");
             commands+=(7+trbytes)/8+1;
