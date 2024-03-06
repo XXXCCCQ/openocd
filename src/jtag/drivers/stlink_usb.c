@@ -718,38 +718,53 @@ static int jtag_libusb_bulk_transfer_n(
 				 */
 				transfers[i].transfer_size = transfers[i].transfer->actual_length;
 
-				uint8_t *rxbuf1 = (uint8_t *)transfers[i].transfer->buffer;
-				uint8_t *commands1 = rxbuf1;
-				uint32_t count1 = transfers[i].transfer->actual_length;
-				while ((commands1 < (rxbuf1 + count1)) && (*commands1 != CMD_STOP))
-    			{
-					switch ((*commands1) & 0x0F)
-        			{
-						case CMD_FREQ:
-							commands1+=2;
-							break;
-						case CMD_SETSIG:
-							commands1+=2;
-							break;
-						case CMD_CLK:
-							commands1+=2;
-							break;
-						case CMD_XFER:
-							uint32_t trbytes1=xfer_bytes(commands1,(*commands1 & EXTEND_LENGTH));
-							uint8_t *data=transfers[i].buf;
-							size_t data_size=transfers[i].transfer_size;
-							for(size_t j=0;j<data_size;++j){
-							LOG_INFO("transfer data:%02X",data[j]);
-							}
-							commands1+=(7+trbytes1)/8+1;
-							break;
-						default:
-							break;
-					}
-					commands1++;
-				}
+
+			// 	bool max_frequency=true;
+			// 	uint8_t *rxbuf1 = (uint8_t *)transfers[i].buf;
+			// 	uint8_t *commands1 = rxbuf1;
+			// 	uint32_t count1 = transfers[i].transfer_size;
+			// 	while ((commands1 < (rxbuf1 + count1)) && (*commands1 != CMD_STOP))
+    		// 	{
+			// 		switch ((*commands1) & 0x0F)
+        	// 		{
+			// 			case CMD_FREQ:
+			// 				commands1+=2;
+			// 				max_frequency=verify_maxfrequency((commands1[1] << 8) | commands1[2]);
+			// 				break;
+			// 			case CMD_SETSIG:
+			// 				LOG_INFO("value of setsig:commmands1[1]:%d",commands1[1]);
+			// 				LOG_INFO("value of setsig:commmands1[2]:%d",commands1[2]);
+			// 				commands1+=2;
+			// 				break;
+			// 			case CMD_CLK:
+			// 				LOG_INFO("value of clk:commmands1[1]:%d",commands1[1]);
+			// 				LOG_INFO("value of clk:commmands1[2]:%d",commands1[2]);
+			// 				commands1+=2;
+			// 				break;
+			// 			case CMD_XFER:
+			// 				uint32_t trbytes1=xfer_bytes(commands1,(*commands1 & EXTEND_LENGTH));
+			// 				uint16_t remaining_length = max_frequency ? trbytes1 & 7 : trbytes1;
+							
+			// 				LOG_INFO("value of commmands1[1]:%d",commands1[1]);
+			// 				LOG_INFO("value of trbytes1:%d",trbytes1);
+			// 				if(remaining_length){
+			// 					LOG_INFO("value of remaining_length:%d",remaining_length);
+			// 				}
+
+			// 				uint8_t *data=transfers[i].buf;
+			// 				size_t data_size=transfers[i].transfer_size;
+			// 				for(size_t j=0;j<data_size;++j){
+			// 				LOG_INFO("transfer data:%02X",data[j]);
+			// 				}
+			// 				commands1+=(7+trbytes1)/8+1;
+			// 				break;
+			// 			default:
+			// 				break;
+			// 		}
+			// 		commands1++;
+			// 	}
 				
-			}
+			 }
 		}
 	}
 	
@@ -802,6 +817,14 @@ static int jtag_libusb_bulk_transfer_n(
 	// 	}
 //((*transfers[i].transfer->buffer)&0x0F)==CMD_FREQ
 // below c is i write ,free alone 
+	for(size_t j=0;j<transfers[0].size;++j){
+		LOG_INFO("transfers[0].buf=h->cmdbuf:%02X",transfers[0].buf[j]);
+	}
+	for(size_t j=0;j<transfers[1].size;++j){
+		LOG_INFO("transfers[1].buf=buf:%02X",transfers[1].buf[j]);
+	}
+	
+
 	for (size_t i =0 ; i<n_transfers;++i){
 		libusb_free_transfer(transfers[i].transfer);
 		transfers[i].transfer = NULL;
