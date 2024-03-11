@@ -730,10 +730,14 @@ static int jtag_libusb_bulk_transfer_n(
 	{
 		switch ((*commands1) & 0x0F)
 		{
+			case CMD_INFO:
+				break;
+			case CMD_GETSIG:
+				break;
 			case CMD_FREQ://0x02
 				max_frequency=verify_maxfrequency((commands1[1] << 8) | commands1[2]);
-				LOG_INFO("value of FREQ:commmands1[0]:%02X,value of FREQ:commands1[1]:%02X,value of clk:commands1[2]:%02X",
-				commands1[0],commands1[1],commands1[2]);
+				// LOG_INFO("value of FREQ:commmands1[0]:%02X,value of FREQ:commands1[1]:%02X,value of clk:commands1[2]:%02X",
+				// commands1[0],commands1[1],commands1[2]);
 				commands1+=2;
 				break;
 			case CMD_SETSIG://0x04
