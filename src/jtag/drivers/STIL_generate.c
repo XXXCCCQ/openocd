@@ -415,87 +415,88 @@ enum SignalIdentifier
 // }
 //void generate_signals(FILE *fp, struct libusb_transfer *transfer,struct libusb_device_handle *dev_handle,unsigned char *buffer,void *user_data)
 
+
 void enter_xfer(struct jtag_xfer *transfers){
     uint8_t *rxbuf=(uint8_t*)transfers[0].buf;
 	uint8_t *commands=rxbuf;
+	
 	//LOG_INFO("commands[0]=%02X",commands[0]);
 	// if(commands[0]==STLINK_GET_VERSION || commands[0]==STLINK_GET_CURRENT_MODE 
 	// || commands[0]==STLINK_GET_TARGET_VOLTAGE){
 	// 	LOG_INFO("signals=TDO;");
 	// }
 	if(commands[0]==STLINK_DEBUG_COMMAND){
-		//LOG_INFO("commands[1]=%02X",commands[1]);
 		switch(commands[1]){
-			case STLINK_DEBUG_APIV2_SWD_SET_FREQ://0x43
+			case STLINK_DEBUG_APIV2_SWD_SET_FREQ://0x43 read 
 				commands+=2;
 				break;
-			case STLINK_DEBUG_APIV2_WRITE_DAP_REG://0x46
+			case STLINK_DEBUG_APIV2_WRITE_DAP_REG://0x46 read
 				commands+=6;
 				break;
-			case STLINK_DEBUG_APIV2_ENTER://mode enter 0x30
+			case STLINK_DEBUG_APIV2_ENTER://mode enter 0x30 read
 				commands+=2;
 				break;
-			case STLINK_DEBUG_APIV2_GETLASTRWSTATUS2://0x3e
+			case STLINK_DEBUG_APIV2_GETLASTRWSTATUS2://0x3e read
 				break;
-			case STLINK_DEBUG_APIV2_READ_IDCODES://0x31
+			case STLINK_DEBUG_APIV2_READ_IDCODES://0x31 read
 				break;
-			case STLINK_DEBUG_APIV2_DRIVE_NRST://0x3c
+			case STLINK_DEBUG_APIV2_DRIVE_NRST://0x3c read
 				commands+=1;
 				break;
 			case STLINK_DEBUG_READMEM_32BIT://0x07
+				//LOG_INFO("read one time");
 				commands+=4; //addr
 				commands+=2; //len
 				commands+=1; //ap_num 
 				commands+=3; //csw
 				break;
 			case STLINK_DEBUG_WRITEMEM_32BIT://0x08
-				LOG_INFO("commands[0]=%02X",commands[0]);
-				LOG_INFO("commands[1]=%02X",commands[1]);
-				LOG_INFO("commands[2]=%02X",commands[2]);
-				LOG_INFO("commands[3]=%02X",commands[3]);
-				LOG_INFO("commands[4]=%02X",commands[4]);
-				LOG_INFO("commands[5]=%02X",commands[5]);
-				//commands+=4; //addr
+				// //commands+=4; //addr
+				LOG_INFO("write one time");
+
 				uint16_t length;
-				LOG_INFO("commands[6]=%02X",commands[6]);
-				LOG_INFO("commands[7]=%02X",commands[7]);
 				length = (uint16_t)(commands[6]) | ((uint16_t)(commands[7]) << 8);
 				generate_stil11(transfers[1].buf,length);
-				commands+=2; //len
-				commands+=1; //ap_num 
-				commands+=3; //csw
+				// commands+=2; //len
+				// commands+=1; //ap_num 
+				// commands+=3; //csw
 				break;
 		}
 	}
 	}
 
 
-        void generate_stil11(const uint8_t *buf, uint16_t size){
-            FILE *fp;
-            fp=fopen("stil11","a+");
+	void generate_stil11(const uint8_t *buf, uint16_t size){
 
-            LOG_INFO("length=%02X",size);
-            const uint8_t *xfer_in;
-            xfer_in = buf;
-            fprintf(fp, "    SI1="); // tdi
-            for (uint32_t i = 0; i < size; i++)
-            {
-                if ((xfer_in[i / 8] >> (7 - (i % 8))) & 1)
-                {
-                    fprintf(fp, "H");
-                }
-                else
-                {
-                    fprintf(fp, "L");
-                }
-            }
-            fprintf(fp, ";\n");
+		FILE *fp;
+		fp=fopen("stil","a+");
+		LOG_INFO("length=%02X",size);
+		const uint8_t *xfer_in;
+		xfer_in = buf;
 
-            fprintf(fp, "    SI2=");
-            for (uint32_t i = 0; i < size; i++)
-            {
-                fprintf(fp, "HL");
-            }
-            fprintf(fp, ";\n");
-        }
+
+		fprintf(fp, "    SI1="); // tdi
+		for (uint32_t i = 0; i < size; i++)
+		{
+			if ((xfer_in[i / 8] >> (7 - (i % 8))) & 1)
+			{
+				fprintf(fp, "H");
+			}
+			else
+			{
+				fprintf(fp, "L");
+			}
+		}
+		fprintf(fp, ";\n");
+
+		// fprintf(fp, "    SI2=");
+		// for (uint32_t i = 0; i < size; i++)
+		// {
+		// 	fprintf(fp, "HL");
+		// }
+		// fprintf(fp, ";\n");
+		
+		// fclose(fp);
+
+	}
         

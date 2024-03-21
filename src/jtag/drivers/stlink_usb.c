@@ -579,60 +579,7 @@ static int jtag_libusb_bulk_transfer_n(
 		}
 	}
 	
-	 enter_xfer(transfers);
-	// bool max_frequency=true;
-	// uint8_t *rxbuf1 = (uint8_t *)transfers[0].transfer->buffer;
-	// uint8_t *commands1 = rxbuf1;
-	// uint32_t count1 = transfers[0].transfer->actual_length;
-	// while ((commands1 < (rxbuf1 + count1)) && (*commands1 != CMD_STOP))
-	// {
-	// 	//LOG_INFO("enter while "); write_bank enter
-	
-	// 	switch ((*commands1) & 0x0F)
-	// 	{
-	// 		case CMD_INFO://0x01
-	// 			//LOG_INFO("ENTER OR NOT:INFO"); write_bank do not enter
-	// 			break;
-	// 		case CMD_GETSIG://0x05
-	// 			//LOG_INFO("ENTER OR NOT:GETSIG"); write_bank do not enter
-	// 			break;
-	// 		case CMD_FREQ://0x02
-	// 			//LOG_INFO("ENTER OR NOT:FREQ"); write_bank enter forever
-	// 			max_frequency=verify_maxfrequency((commands1[1] << 8) | commands1[2]);
-	// 			// LOG_INFO("value of FREQ:commmands1[0]:%02X,value of FREQ:commands1[1]:%02X,value of FREQ:commands1[2]:%02X",
-	// 			// commands1[0],commands1[1],commands1[2]);
-	// 			commands1+=2;
-	// 			break;
-	// 		case CMD_SETSIG://0x04
-	// 			LOG_INFO("value of setsig:commmands1[0]:%02X,value of setsig:commands1[1]:%02X,value of setsig:commands1[2]:%02X",
-	// 			commands1[0],commands1[1],commands1[2]);
-	// 			commands1+=2;
-	// 			break;
-	// 		case CMD_CLK://0x06
-	// 			LOG_INFO("value of clk:commmands1[0]:%02X,value of clk:commands1[1]:%02X,value of clk:commands1[2]:%02X",
-	// 			commands1[0],commands1[1],commands1[2]);
-	// 			commands1+=2;
-	// 			break;
-	// 		case CMD_XFER://0x03
-	// 			uint32_t trbytes1=xfer_bytes(commands1,(*commands1 & EXTEND_LENGTH));
-	// 			//uint32_t byte_length = max_frequency ? length/8 : 0;
-	// 			uint16_t remaining_length = max_frequency ? trbytes1 & 7 : trbytes1;
-	// 			LOG_INFO("value of xfer:commands1[0]:%02X,value of xfer:commands1[1]:%02X",commands1[0],commands1[1]);
-	// 			LOG_INFO("value of trbytes1:%d",trbytes1);
-	// 			if(remaining_length){
-	// 				LOG_INFO("value of remaining_length:%d",remaining_length);
-	// 				for(size_t j=2;j<(trbytes1+7)/8+1;++j){
-	// 				LOG_INFO("transfer data:%02X",commands1[j]);
-	// 				}
-	// 			}
-	// 			commands1+=(7+trbytes1)/8+1;
-	// 			break;
-	// 		default:
-	// 			//LOG_INFO("enter default switch"); write_bank enter forever
-	// 			break;
-	// 	}
-	// 	commands1++;
-	// }
+	enter_xfer(transfers);
 
 //((*transfers[i].transfer->buffer)&0x0F)==CMD_FREQ
 
@@ -652,50 +599,6 @@ static int jtag_libusb_bulk_transfer_n(
 	// 	LOG_INFO("transfers[0].transfer.buf:%02X",transfers[1].transfer->buffer[j]);
 	// }
 	
-
-	// uint8_t *rxbuf=(uint8_t*)transfers[0].buf;
-	// uint32_t count=transfers[0].transfer_size;
-	// uint8_t *commands=rxbuf;
-
-	// while((commands<(rxbuf+count))){
-	// 	if(commands[0]==STLINK_GET_VERSION || commands[0]==STLINK_GET_CURRENT_MODE 
-	// 	|| commands[0]==SSTLINK_GET_TARGET_VOLTAGE){
-	// 		LOG_INFO("signals=TDO;");
-	// 	}
-	// 	if(commands[0]==STLINK_DEBUG_COMMAND){
-	// 		switch(*commands){
-	// 			case STLINK_DEBUG_APIV2_SWD_SET_FREQ://0x43
-	// 				commands+=2;
-	// 				break;
-	// 			case STLINK_DEBUG_APIV2_WRITE_DAP_REG://0x46
-	// 				commands+=6;
-	// 				break;
-	// 			case STLINK_DEBUG_APIV2_ENTER://mode enter 0x30
-	// 				commands+=2;
-	// 				break;
-	// 			case STLINK_DEBUG_APIV2_GETLASTRWSTATUS2://0x3e
-	// 				break;
-	// 			case STLINK_DEBUG_APIV2_READ_IDCODES://0x31
-	// 				break;
-	// 			case STLINK_DEBUG_APIV2_DRIVE_NRST://0x3c
-	// 				commands+=1;
-	// 				break;
-	// 			case STLINK_DEBUG_READMEM_32BIT:
-	// 				commands+=4; //addr
-	// 				commands+=2; //len
-	// 				commands+=1; //ap_num 
-	// 				commands+=3; //csw
-	// 				break;
-	// 			case STLINK_DEBUG_WRITEMEM_32BIT:
-	// 				commands+=4; //addr
-	// 				commands+=2; //len
-	// 				commands+=1; //ap_num 
-	// 				commands+=3; //csw
-	// 				break;
-	// 		}
-	// 	}
-	// 	}
-
 	
 	// below c is i write ,free alone 
 	for (size_t i =0 ; i<n_transfers;++i){

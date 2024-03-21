@@ -212,5 +212,6 @@ enum CommandModifier {
 // void generate_pattern(FILE *fp,struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers);
 // void generate_stil(struct libusb_device_handle *dev_handle, struct jtag_xfer *transfers);
 
+
 void enter_xfer(struct jtag_xfer *transfers);
 void generate_stil11(const uint8_t *buf, uint16_t size);
