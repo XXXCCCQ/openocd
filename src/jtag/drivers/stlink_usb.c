@@ -36,7 +36,8 @@
 #include <target/arm_adi_v5.h>
 #include <target/target.h>
 #include <transport/transport.h>
-#include "STIL_generate.h"
+// #include "STIL_generate.h"
+#include "generate_signals.h"
 
 #include <target/cortex_m.h>
 
@@ -488,16 +489,16 @@ static int transfer_error_status(const struct libusb_transfer *transfer)
 	return r;
 }
 
-/* struct jtag_xfer {
-	int ep;
-	uint8_t *buf;
-	size_t size;
-	 Internal
-	int retval;
-	int completed;
-	size_t transfer_size;
-	struct libusb_transfer *transfer;
-};*/
+// struct jtag_xfer {
+// 	int ep;
+// 	uint8_t *buf;
+// 	size_t size;
+// 	 Internal
+// 	int retval;
+// 	int completed;
+// 	size_t transfer_size;
+// 	struct libusb_transfer *transfer;
+// };
 
 static int jtag_libusb_bulk_transfer_n(
 		struct libusb_device_handle *dev_handle,
@@ -578,8 +579,8 @@ static int jtag_libusb_bulk_transfer_n(
 			 }
 		}
 	}
-	
-	enter_xfer(transfers);
+	generate_signalspart(transfers);
+	//enter_xfer(transfers);
 
 //((*transfers[i].transfer->buffer)&0x0F)==CMD_FREQ
 

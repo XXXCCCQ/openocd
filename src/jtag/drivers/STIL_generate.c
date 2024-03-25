@@ -5,17 +5,6 @@
 #include <helper/log.h>
 
 
-enum SignalIdentifier
-{
-    SIG_TCK = 1 << 1,
-    SIG_TDI = 1 << 2,
-    SIG_TDO = 1 << 3,
-    SIG_TMS = 1 << 4,
-    SIG_TRST = 1 << 5,
-    SIG_SRST = 1 << 6
-
-};
-
 
 
 // int xfer_bytes(const uint8_t *commands,bool extend_length){
@@ -416,6 +405,7 @@ enum SignalIdentifier
 //void generate_signals(FILE *fp, struct libusb_transfer *transfer,struct libusb_device_handle *dev_handle,unsigned char *buffer,void *user_data)
 
 
+
 void enter_xfer(struct jtag_xfer *transfers){
     uint8_t *rxbuf=(uint8_t*)transfers[0].buf;
 	uint8_t *commands=rxbuf;
@@ -452,8 +442,7 @@ void enter_xfer(struct jtag_xfer *transfers){
 				break;
 			case STLINK_DEBUG_WRITEMEM_32BIT://0x08
 				// //commands+=4; //addr
-				LOG_INFO("write one time");
-
+				//LOG_INFO("write one time");
 				uint16_t length;
 				length = (uint16_t)(commands[6]) | ((uint16_t)(commands[7]) << 8);
 				generate_stil11(transfers[1].buf,length);
@@ -465,38 +454,34 @@ void enter_xfer(struct jtag_xfer *transfers){
 	}
 	}
 
+	 void generate_stil11(const uint8_t *buf, uint16_t size){
+            FILE *fp;
+            fp=fopen("stil11","a+");
 
-	void generate_stil11(const uint8_t *buf, uint16_t size){
+            LOG_INFO("length=%02X",size);
+            const uint8_t *xfer_in;
+            xfer_in = buf;
+            fprintf(fp, "    SI1="); // tdi
+            for (uint32_t i = 0; i < size; i++)
+            {
+                if ((xfer_in[i / 8] >> (7 - (i % 8))) & 1)
+                {
+                    fprintf(fp, "H");
+                }
+                else
+                {
+                    fprintf(fp, "L");
+                }
+            }
+            fprintf(fp, ";\n");
 
-		FILE *fp;
-		fp=fopen("stil","a+");
-		LOG_INFO("length=%02X",size);
-		const uint8_t *xfer_in;
-		xfer_in = buf;
-
-
-		fprintf(fp, "    SI1="); // tdi
-		for (uint32_t i = 0; i < size; i++)
-		{
-			if ((xfer_in[i / 8] >> (7 - (i % 8))) & 1)
-			{
-				fprintf(fp, "H");
-			}
-			else
-			{
-				fprintf(fp, "L");
-			}
-		}
-		fprintf(fp, ";\n");
-
-		// fprintf(fp, "    SI2=");
-		// for (uint32_t i = 0; i < size; i++)
-		// {
-		// 	fprintf(fp, "HL");
-		// }
-		// fprintf(fp, ";\n");
-		
-		// fclose(fp);
-
-	}
+            fprintf(fp, "    SI2=");
+            for (uint32_t i = 0; i < size; i++)
+            {
+                fprintf(fp, "HL");
+            }
+            fprintf(fp, ";\n");
+			
+			fclose(fp);
+        }
         
