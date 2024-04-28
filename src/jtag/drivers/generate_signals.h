@@ -198,12 +198,12 @@ enum CommandModifier {
   READOUT = 0x80,
 };
 
-bool checkExistence(FILE *file, const char *content);
-int count0ccurrences(FILE *fp,const char *str);
+// bool checkExistence(FILE *file, const char *content);
+// int count0ccurrences(FILE *fp,const char *str);
 void generate_signalspart(FILE *fp,struct jtag_xfer *transfers);
-void generate_signalsgrouppart(FILE *fp);
+//void generate_signalsgrouppart(FILE *fp);
 void generate_timingpart(FILE *fp);
 void generate_patternburstpart(FILE *fp);
 void generate_patternExecpart(FILE *fp);
-void generate_patternsignals(FILE *Fp,const uint8_t *buf, uint16_t size);
+void generate_patternsignals(FILE *Fp,const uint8_t *buf,struct jtag_xfer *transfers);
 void generate_patternpart(FILE *fp,struct jtag_xfer *transfers);
