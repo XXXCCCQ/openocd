@@ -1,6 +1,17 @@
 {
     "files.associations": {
-        "hla_layout.h": "c"
+        "hla_layout.h": "c",
+        "transport.h": "c",
+        "target.h": "c",
+        "arm_adi_v5.h": "c",
+        "hla_interface.h": "c",
+        "stdio.h": "c",
+        "stdint.h": "c",
+        "stil_generate.h": "c",
+        "cortex_m.h": "c",
+        "stdbool.h": "c",
+        "log.h": "c",
+        "stil": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
